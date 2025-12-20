@@ -1,0 +1,21 @@
+{
+  "name": "contracts_backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "2.2.3",
+    "chai": "4.3.10",
+    "ethers": "5.8.0",
+    "hardhat": "2.22.1",
+    "mocha": "10.2.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
+    "dotenv": "^17.2.3"
+  }
+}

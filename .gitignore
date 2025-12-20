@@ -1,0 +1,13 @@
+# Node
+node_modules/
+dist/
+
+# Hardhat
+artifacts/
+cache/
+
+# Env
+.env
+
+# OS
+.DS_Store
