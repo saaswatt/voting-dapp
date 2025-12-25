@@ -1,16 +1,33 @@
 import { useState } from "react";
 import { getContract } from "../hooks/useWallet";
+import { useElectionContext } from "../context/ElectionContext";
 
 export default function AdminPanel() {
   const [candidateName, setCandidateName] = useState("");
   const [duration, setDuration] = useState("");
+  const [newElectionAddress, setNewElectionAddress] = useState("");
 
+  const { setActiveContractAddress } = useElectionContext();
+
+  // ✅ NEW ELECTION (MANUAL ADDRESS SET)
+  const setNewElection = () => {
+    if (!newElectionAddress) {
+      alert("Please enter a contract address");
+      return;
+    }
+
+    setActiveContractAddress(newElectionAddress);
+    alert("New election activated");
+    setNewElectionAddress("");
+  };
+
+  // Existing admin actions (unchanged)
   const addCandidate = async () => {
-  const contract = await getContract();
-  const tx = await contract.addCandidate(candidateName);
-  await tx.wait();
-  alert("Candidate added");
-};
+    const contract = await getContract();
+    const tx = await contract.addCandidate(candidateName);
+    await tx.wait();
+    alert("Candidate added");
+  };
 
   const startRegistration = async () => {
     const contract = await getContract();
@@ -36,6 +53,19 @@ export default function AdminPanel() {
   return (
     <div>
       <h2>Admin Panel</h2>
+
+      {/* ✅ NEW ELECTION INPUT */}
+      <h3>Activate New Election</h3>
+      <input
+        placeholder="Deployed Contract Address"
+        value={newElectionAddress}
+        onChange={(e) => setNewElectionAddress(e.target.value)}
+      />
+      <button onClick={setNewElection}>
+        Set Active Election
+      </button>
+
+      <hr />
 
       <input
         placeholder="Candidate name"

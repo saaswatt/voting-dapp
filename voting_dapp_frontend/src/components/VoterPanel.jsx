@@ -1,25 +1,39 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import { getContract } from "../hooks/useWallet";
+import { useElectionContext } from "../context/ElectionContext";
 
 const STATES = ["Created", "Registration Open", "Voting Open", "Ended"];
 
 export default function VoterPanel() {
+  const { activeContractAddress } = useElectionContext();
+
   const [regNo, setRegNo] = useState("");
   const [name, setName] = useState("");
   const [candidateId, setCandidateId] = useState("");
 
   const [candidates, setCandidates] = useState([]);
   const [state, setState] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // 🔁 Reload election data whenever contract address changes
   useEffect(() => {
+    if (!activeContractAddress) {
+      setCandidates([]);
+      setState("");
+      setError("No active election");
+      return;
+    }
+
     loadElectionData();
-  }, []);
+  }, [activeContractAddress]);
 
   const loadElectionData = async () => {
     try {
+      setLoading(true);
+      setError("");
+
       const contract = await getContract();
 
       const currentState = await contract.currentState();
@@ -40,7 +54,7 @@ export default function VoterPanel() {
       setCandidates(temp);
     } catch (err) {
       console.error(err);
-      setError("Failed to load election data");
+      setError(err.message || "Failed to load election data");
     } finally {
       setLoading(false);
     }
@@ -64,18 +78,12 @@ export default function VoterPanel() {
       }
 
       const contract = await getContract();
-
-      // 🔐 Fetch event-specific salt from blockchain
       const salt = await contract.eventSalt();
 
       const identityHash = ethers.utils.keccak256(
         ethers.utils.solidityPack(
           ["string", "string", "bytes32"],
-          [
-            regNo.trim(),
-            name.trim().toLowerCase(),
-            salt,
-          ]
+          [regNo.trim(), name.trim().toLowerCase(), salt]
         )
       );
 
@@ -87,7 +95,7 @@ export default function VoterPanel() {
       setName("");
     } catch (err) {
       console.error(err);
-      setError(err.reason || "Registration failed");
+      setError(err.reason || err.message || "Registration failed");
     }
   };
 
@@ -106,14 +114,16 @@ export default function VoterPanel() {
 
       alert("Vote cast successfully");
       setCandidateId("");
-
-      // Refresh results if voting ends soon
       loadElectionData();
     } catch (err) {
       console.error(err);
-      setError(err.reason || "Voting failed");
+      setError(err.reason || err.message || "Voting failed");
     }
   };
+
+  if (!activeContractAddress) {
+    return <p>No active election yet. Please wait for admin.</p>;
+  }
 
   if (loading) return <p>Loading election data...</p>;
 

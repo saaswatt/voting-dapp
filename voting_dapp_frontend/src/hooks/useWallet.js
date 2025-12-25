@@ -10,6 +10,10 @@ export async function getContract() {
     throw new Error("MetaMask not found");
   }
 
+  if (!CONTRACT_ADDRESS) {
+    throw new Error("No active election. Admin must create a new election.");
+  }
+
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const network = await provider.getNetwork();
 
@@ -26,26 +30,4 @@ export async function getContract() {
     abi,
     signer
   );
-}
-
-export async function getCurrentAccount() {
-  if (!window.ethereum) return null;
-
-  const accounts = await window.ethereum.request({
-    method: "eth_accounts",
-  });
-
-  return accounts.length > 0 ? accounts[0] : null;
-}
-
-export async function connectWallet() {
-  if (!window.ethereum) {
-    throw new Error("MetaMask not found");
-  }
-
-  const accounts = await window.ethereum.request({
-    method: "eth_requestAccounts",
-  });
-
-  return accounts[0];
 }

@@ -3,22 +3,23 @@ import WalletConnect from "./components/WalletConnect";
 import AdminPanel from "./components/AdminPanel";
 import VoterPanel from "./components/VoterPanel";
 import { getContract } from "./hooks/useWallet";
+import { useElectionContext } from "./context/ElectionContext";
 
 function App() {
   const [account, setAccount] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  //Detect wallet account change
+  const { activeContractAddress } = useElectionContext();
+
+  // Detect wallet account change
   useEffect(() => {
     if (!window.ethereum) return;
 
     const handleAccountsChanged = (accounts) => {
       if (accounts.length === 0) {
-        // Wallet disconnected
         setAccount(null);
         setIsAdmin(false);
       } else {
-        // Wallet switched
         setAccount(accounts[0]);
       }
     };
@@ -33,19 +34,20 @@ function App() {
     };
   }, []);
 
-  //Check admin role whenever account changes
+  // Check admin role ONLY when an election exists
   useEffect(() => {
     let mounted = true;
 
     const checkAdmin = async () => {
-      if (!account) {
-        setIsAdmin(false);
+      if (!account || !activeContractAddress) {
+        if (mounted) setIsAdmin(false);
         return;
       }
 
       try {
         const contract = await getContract();
         const admin = await contract.admin();
+
         if (mounted) {
           setIsAdmin(admin.toLowerCase() === account.toLowerCase());
         }
@@ -60,7 +62,7 @@ function App() {
     return () => {
       mounted = false;
     };
-  }, [account]);
+  }, [account, activeContractAddress]);
 
   return (
     <div>
@@ -71,7 +73,18 @@ function App() {
       ) : (
         <>
           <p>Connected: {account}</p>
-          {isAdmin ? <AdminPanel /> : <VoterPanel />}
+
+          {/* 🔓 BOOTSTRAP LOGIC */}
+          {!activeContractAddress ? (
+            <>
+              <p>No active election. Admin must activate one.</p>
+              <AdminPanel />
+            </>
+          ) : isAdmin ? (
+            <AdminPanel />
+          ) : (
+            <VoterPanel />
+          )}
         </>
       )}
     </div>
