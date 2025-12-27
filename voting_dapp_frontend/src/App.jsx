@@ -9,7 +9,7 @@ function App() {
   const [account, setAccount] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const { activeElectionId } = useElectionContext();
+  const { activeElectionId, loadingElection } = useElectionContext();
 
   /* ===============================
         ACCOUNT CHANGE HANDLER
@@ -71,6 +71,10 @@ function App() {
   /* ===============================
               UI
   =============================== */
+  if (loadingElection) {
+    return <p>Loading election...</p>;
+  }
+
   return (
     <div>
       <h1>Voting DApp</h1>
